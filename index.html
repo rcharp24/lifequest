@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>LifeQuest</title>
+
+  <!-- Bootstrap CSS (from CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: lightslategray;
+      padding: 30px;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4">🌄️ LifeQuest: Level Up Your Life</h1>
+
+    <!-- Stat display -->
+    <div class="row mb-4">
+      <div class="col">
+        <p>💪 Strength: <span id="strengthXP">0</span> XP | Lv. <span id="strengthLevel">1</span></p>
+        <div class="progress mb-2">
+            <div id="strengthBar" class="progress-bar" role="progressbar"></div>
+        </div>
+        <p>🧠 Wisdom: <span id="wisdomXP">0</span> XP | Lv. <span id="wisdomLevel">1</span></p>
+        <div class="progress mb-2">
+            <div id="wisdomBar" class="progress-bar" role="progressbar"></div>
+        </div>
+        <p>📘 Discipline: <span id="disciplineXP">0</span> XP | Lv. <span id="disciplineLevel">1</span></p>
+        <div class="progress mb-2">
+            <div id="disciplineBar" class="progress-bar" role="progressbar"></div>
+        </div>
+        <p>❤️ Vitality: <span id="vitalityXP">0</span> XP | Lv. <span id="vitalityLevel">1</span></p>
+        <div class="progress mb-2">
+            <div id="vitalityBar" class="progress-bar" role="progressbar"></div>
+        </div>
+        <p>🗣️ Social: <span id="socialXP">0</span> XP | Lv. <span id="socialLevel">1</span></p>
+        <div class="progress mb-2">
+            <div id="socialBar" class="progress-bar" role="progressbar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add task button -->
+    <button class="btn btn-primary mb-3" id="addTaskBtn" data-bs-toggle="modal" data-bs-target="#addTaskModal">➕ Add Task</button>
+
+    <!-- Task List Display -->
+    <h3 class="mt-4">📝 Completed Tasks</h3>
+    <div id="taskList" class="list-group mb-4"></div>
+
+    <!-- Achievements -->
+    <h3 class="mt-4">🏅 Achievements</h3>
+    <ul id="achievementList" class="list-group"></ul>
+  </div> <!-- End container -->
+
+  <!-- Add Task Modal -->
+  <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="addTaskForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Task Name input -->
+          <div class="mb-3">
+            <label for="taskSelect" class="form-label">Task Name</label>
+            <select class="form-control" id="taskSelect" required>
+              <option value="" selected disabled>Select Task</option>
+              <option value="Learn a new word and use it" data-xp="5">Learn a new word and use it (5 XP)</option>
+              <option value="Do 20 pushups" data-xp="10">Do 20 pushups (10 XP)</option>
+              <option value="Read 10 pages of a book" data-xp="10">Read 10 pages of a book (10 XP)</option>
+              <option value="Drink 8 cups of water" data-xp="10">Drink 8 cups of water (10 XP)</option>
+              <option value="Meditate for 10 minutes" data-xp="10">Meditate for 10 minutes (10 XP)</option>
+              <option value="Call a friend or family member" data-xp="10">Call a friend or family member (10 XP)</option>
+              <option value="Walk 5,000 steps" data-xp="15">Walk 5,000 steps (15 XP)</option>
+              <option value="Watch a documentary" data-xp="15">Watch a documentary (15 XP)</option>
+              <option value="Eat 3 healthy meals" data-xp="15">Eat 3 healthy meals (15 XP)</option>
+              <option value="Start a conversation with someone new" data-xp="15">Start a conversation with someone new (15 XP)</option>
+              <option value="Wake up before 7 AM" data-xp="15">Wake up before 7 AM (15 XP)</option>
+              <option value="Complete a workout session" data-xp="20">Complete a workout session (20 XP)</option>
+              <option value="Study for 1 hour" data-xp="20">Study for 1 hour (20 XP)</option>
+              <option value="Attend a social event" data-xp="20">Attend a social event (20 XP)</option>
+              <option value="Stick to a schedule for the day" data-xp="25">Stick to a schedule for the day (25 XP)</option>
+              <option value="Other">Other (custom task)</option>
+            </select>
+          </div>
+          <!-- Hidden custom task input -->
+          <div class="mb-3" id="customTaskContainer" style="display:none;">
+            <input type="text" class="form-control" id="customTaskName" placeholder="Enter custom task name">
+          </div>
+          <!-- Stat select -->
+          <div class="mb-3">
+            <label for="statSelect" class="form-label">Stat Affected</label>
+            <select class="form-select" id="statSelect" required>
+              <option value="" selected disabled>Select stat</option>
+              <option value="strength">Strength</option>
+              <option value="wisdom">Wisdom</option>
+              <option value="discipline">Discipline</option>
+              <option value="vitality">Vitality</option>
+              <option value="social">Social</option>
+            </select>
+          </div>
+          <!-- XP input -->
+          <div class="mb-3">
+            <label for="xpInput" class="form-label">XP Amount</label>
+            <input type="number" class="form-control" id="xpInput" min="1" placeholder="Enter XP value" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Add Task</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Your renderer logic (frontend JS) -->
+  <script src="renderer.js"></script>
+</body>
+</html>
