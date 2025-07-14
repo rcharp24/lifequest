@@ -1,5 +1,14 @@
 // src/main.js
 
+// Auto-reload on file changes during development
+try {
+  require('electron-reload')(__dirname, {
+    ignored: /node_modules|[\/\\]\./
+  });
+} catch (_) {
+  console.log('electron-reload not available');
+}
+
 // Import required modules from Electron and Node
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
