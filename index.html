@@ -8,13 +8,15 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body class="p-4">
+
   <!-- Avatar and Header -->
   <div class="text-center mb-4">
     <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=hero" alt="Avatar" width="100" class="rounded-circle shadow" />
     <h2 class="mt-2">Welcome, Hero!</h2>
   </div>
+
   <!-- Streak Counter -->
-   <div id="streakDisplay" class="text-center mb-3 text-warning">🔥 Streak: 0 days</div>
+  <div id="streakDisplay" class="text-center mb-3 text-warning">🔥 Streak: 0 days</div>
 
   <!-- Dark Mode Toggle -->
   <div class="form-check form-switch mb-3">
@@ -46,23 +48,19 @@
   <!-- Add Task Button -->
   <button id="addTaskBtn" class="btn btn-primary mb-3">➕ Add Task</button>
 
-  <!-- Current Task-->
+  <!-- Current Task -->
   <hr>
-  <h4>📜 Current Task </h4>
+  <h4>📜 Current Task</h4>
   <div id="currentTask" class="mb-3"></div>
+
   <!-- Task List -->
   <div id="taskList" class="list-group"></div>
 
-  <div class="mb-3">
-    <label for="taskNotes" class="form-label">Optional Notes</label>
-    <textarea id="taskNotes" class="form-control" rows="2" placeholder="Any additional info?"></textarea>
-  </div>
-  
-  <!-- Task History Log-->
+  <!-- Task History Log -->
   <hr>
   <h4>📜 Task History</h4>
   <div id="taskHistory" class="mb-3"></div>
-  
+
   <!-- XP Gain Animation -->
   <div id="xpGain" class="xp-gain">+10 XP</div>
 
@@ -105,7 +103,6 @@
                 <option value="Attend a social event" data-xp="20">Attend a social event (20 XP)</option>
                 <option value="Stick to a schedule for the day" data-xp="25">Stick to a schedule for the day (25 XP)</option>
                 <option value="Other">Other (custom task)</option>
-                <option value="Other">Other</option>
               </select>
             </div>
             <div class="mb-3" id="customTaskContainer" style="display:none">
@@ -133,6 +130,7 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="renderer.js"></script>

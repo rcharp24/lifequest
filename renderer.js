@@ -25,6 +25,7 @@ const themeToggle = document.getElementById('themeToggle');
 const xpGain = document.getElementById("xpGain");
 const taskNotes = document.getElementById("taskNotes");
 const taskHistory = document.getElementById("taskHistory");
+
 let taskLog = JSON.parse(localStorage.getItem("taskLog") || "[]");
 // ===============================
 // Dark Mode Initialization
@@ -111,7 +112,17 @@ addTaskForm.addEventListener('submit', (e) => {
   // Animate XP gain
   showXPGain(xp);
 
-  // Add to task list UI
+  // Adding the task to the UI
+  addTaskToUI(taskName, stat, xp, notes);
+
+  //Log and save
+  logTask(taskName, stat, xp, notes);
+  saveToLocalStorage;
+
+  addTaskModal.hide();
+});
+  // Add task to task list
+  function addTaskToUI(taskName, stat, xp, notes) {
   const taskElement = document.createElement("div");
   taskElement.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-2");
   
@@ -127,12 +138,12 @@ addTaskForm.addEventListener('submit', (e) => {
     ${notes ? `<br><small class="text-muted">📝 ${notes}</small>` : ""}
   </div>
   <button class="btn btn-sm btn-danger">🗑️</button>
-`;
+
+  `;
 
 
   // Delete task button
   taskElement.querySelector("button").addEventListener("click", () => {
-    const { taskName, stat, xp, notes } = taskElement.dataset;
     logTask(taskName, stat, parseInt(xp), notes);
     taskElement.remove();
     saveToLocalStorage();
@@ -140,11 +151,8 @@ addTaskForm.addEventListener('submit', (e) => {
 
   // Add to UI and save
   taskList.prepend(taskElement);
-  saveToLocalStorage();
-  logTask(taskName, stat, xp, notes);
-  addTaskModal.hide();
-});
 
+};
 // ===============================
 // Update UI
 // ===============================
@@ -182,23 +190,9 @@ function loadFromLocalStorage() {
   if (savedStats) Object.assign(stats, savedStats);
 
   const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-  if (savedTasks) {
-    taskList.innerHTML = savedTasks;
-
-    // Rebind delete buttons
-    document.querySelectorAll("#taskList > div").forEach(taskElement => {
-    const button = taskElement.querySelector("button");
-    if (!button) return;
-
-    button.addEventListener("click", () => {
-      const { taskName, stat, xp, notes } = taskElement.dataset;
-      logTask(taskName, stat, parseInt(xp), notes);
-      taskElement.remove();
-      saveToLocalStorage();
-    });
+  savedTasks.forEach(({ name, stat, xp, notes }) => {
+    addTaskToUI(name, stat, xp, notes);
   });
-
-  }
 
   updateUI();
   renderHistory()
@@ -231,14 +225,11 @@ function checkLevelUp(stat) {
 // XP Gain Animation
 // ===============================
 function showXPGain(amount) {
-  const xpElement = document.getElementById("xpGain");
-  xpElement.textContent = `+${amount} XP`;
-  xpElement.style.opacity = 1;
-
-  // Restart animation
-  xpElement.classList.remove("xp-gain");
-  void xpElement.offsetWidth; // Reflow
-  xpElement.classList.add("xp-gain");
+  xpGain.textContent = `+${amount} XP`;
+  xpGain.style.opacity = 1;
+  xpGain.classList.remove("xp-gain");
+  void xpGain. offsetWidth;
+  xpGain.classList.add("xp-gain");
 
   // Fade out after animation
   setTimeout(() => {
@@ -277,8 +268,9 @@ function checkReminder() {
   const lastDate = localStorage.getItem("lastActionDate");
   const now = new Date();
   const last = new Date(lastDate);
-
   const hoursSinceLast = Math.floor((now - last) / (1000 * 60 * 60));
+
+  
   if (isNaN(hoursSinceLast) || hoursSinceLast >= 24) {
     alert("⏰ It's been a while since your last task! Stay on track! 💪");
   }
