@@ -1,126 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LifeQuest</title>
-
-  <!-- Bootstrap CSS (from CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <style>
-    body {
-      background-color: lightslategray;
-      padding: 30px;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body class="p-4">
-  <div class="container">
-    <h1 class="mb-4">🌄️ LifeQuest: Level Up Your Life</h1>
 
-    <!-- Stat display -->
-    <div class="row mb-4">
-      <div class="col">
-        <p>💪 Strength: <span id="strengthXP">0</span> XP | Lv. <span id="strengthLevel">1</span></p>
-        <div class="progress mb-2">
-            <div id="strengthBar" class="progress-bar" role="progressbar"></div>
-        </div>
-        <p>🧠 Wisdom: <span id="wisdomXP">0</span> XP | Lv. <span id="wisdomLevel">1</span></p>
-        <div class="progress mb-2">
-            <div id="wisdomBar" class="progress-bar" role="progressbar"></div>
-        </div>
-        <p>📘 Discipline: <span id="disciplineXP">0</span> XP | Lv. <span id="disciplineLevel">1</span></p>
-        <div class="progress mb-2">
-            <div id="disciplineBar" class="progress-bar" role="progressbar"></div>
-        </div>
-        <p>❤️ Vitality: <span id="vitalityXP">0</span> XP | Lv. <span id="vitalityLevel">1</span></p>
-        <div class="progress mb-2">
-            <div id="vitalityBar" class="progress-bar" role="progressbar"></div>
-        </div>
-        <p>🗣️ Social: <span id="socialXP">0</span> XP | Lv. <span id="socialLevel">1</span></p>
-        <div class="progress mb-2">
-            <div id="socialBar" class="progress-bar" role="progressbar"></div>
-        </div>
-      </div>
+  <!-- Avatar and Header -->
+  <div class="text-center mb-4">
+    <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=hero" alt="Avatar" width="100" class="rounded-circle shadow" />
+    <h2 class="mt-2">Welcome, Hero!</h2>
+  </div>
+
+  <!-- Streak Counter -->
+  <div id="streakDisplay" class="text-center mb-3 text-warning">🔥 Streak: 0 days</div>
+
+  <!-- Dark Mode Toggle -->
+  <div class="form-check form-switch mb-3">
+    <input class="form-check-input" type="checkbox" id="themeToggle">
+    <label class="form-check-label" for="themeToggle">Dark Mode</label>
+  </div>
+
+  <h1>LifeQuest</h1>
+
+  <!-- XP and Level Sections -->
+  <div id="statsDisplay" class="mb-4">
+    <div class="mb-2">Strength: <span id="strengthLevel">1</span> (XP: <span id="strengthXP">0</span>)
+      <div class="progress"><div class="progress-bar" id="strengthBar" role="progressbar" style="width: 0%">0 XP</div></div>
     </div>
-
-    <!-- Add task button -->
-    <button class="btn btn-primary mb-3" id="addTaskBtn" data-bs-toggle="modal" data-bs-target="#addTaskModal">➕ Add Task</button>
-
-    <!-- Task List Display -->
-    <h3 class="mt-4">📝 Completed Tasks</h3>
-    <div id="taskList" class="list-group mb-4"></div>
-
-    <!-- Achievements -->
-    <h3 class="mt-4">🏅 Achievements</h3>
-    <ul id="achievementList" class="list-group"></ul>
-  </div> <!-- End container -->
-
-  <!-- Add Task Modal -->
-  <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="addTaskForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Task Name input -->
-          <div class="mb-3">
-            <label for="taskSelect" class="form-label">Task Name</label>
-            <select class="form-control" id="taskSelect" required>
-              <option value="" selected disabled>Select Task</option>
-              <option value="Learn a new word and use it" data-xp="5">Learn a new word and use it (5 XP)</option>
-              <option value="Do 20 pushups" data-xp="10">Do 20 pushups (10 XP)</option>
-              <option value="Read 10 pages of a book" data-xp="10">Read 10 pages of a book (10 XP)</option>
-              <option value="Drink 8 cups of water" data-xp="10">Drink 8 cups of water (10 XP)</option>
-              <option value="Meditate for 10 minutes" data-xp="10">Meditate for 10 minutes (10 XP)</option>
-              <option value="Call a friend or family member" data-xp="10">Call a friend or family member (10 XP)</option>
-              <option value="Walk 5,000 steps" data-xp="15">Walk 5,000 steps (15 XP)</option>
-              <option value="Watch a documentary" data-xp="15">Watch a documentary (15 XP)</option>
-              <option value="Eat 3 healthy meals" data-xp="15">Eat 3 healthy meals (15 XP)</option>
-              <option value="Start a conversation with someone new" data-xp="15">Start a conversation with someone new (15 XP)</option>
-              <option value="Wake up before 7 AM" data-xp="15">Wake up before 7 AM (15 XP)</option>
-              <option value="Complete a workout session" data-xp="20">Complete a workout session (20 XP)</option>
-              <option value="Study for 1 hour" data-xp="20">Study for 1 hour (20 XP)</option>
-              <option value="Attend a social event" data-xp="20">Attend a social event (20 XP)</option>
-              <option value="Stick to a schedule for the day" data-xp="25">Stick to a schedule for the day (25 XP)</option>
-              <option value="Other">Other (custom task)</option>
-            </select>
-          </div>
-          <!-- Hidden custom task input -->
-          <div class="mb-3" id="customTaskContainer" style="display:none;">
-            <input type="text" class="form-control" id="customTaskName" placeholder="Enter custom task name">
-          </div>
-          <!-- Stat select -->
-          <div class="mb-3">
-            <label for="statSelect" class="form-label">Stat Affected</label>
-            <select class="form-select" id="statSelect" required>
-              <option value="" selected disabled>Select stat</option>
-              <option value="strength">Strength</option>
-              <option value="wisdom">Wisdom</option>
-              <option value="discipline">Discipline</option>
-              <option value="vitality">Vitality</option>
-              <option value="social">Social</option>
-            </select>
-          </div>
-          <!-- XP input -->
-          <div class="mb-3">
-            <label for="xpInput" class="form-label">XP Amount</label>
-            <input type="number" class="form-control" id="xpInput" min="1" placeholder="Enter XP value" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Add Task</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </form>
+    <div class="mb-2">Wisdom: <span id="wisdomLevel">1</span> (XP: <span id="wisdomXP">0</span>)
+      <div class="progress"><div class="progress-bar" id="wisdomBar" role="progressbar" style="width: 0%">0 XP</div></div>
+    </div>
+    <div class="mb-2">Discipline: <span id="disciplineLevel">1</span> (XP: <span id="disciplineXP">0</span>)
+      <div class="progress"><div class="progress-bar" id="disciplineBar" role="progressbar" style="width: 0%">0 XP</div></div>
+    </div>
+    <div class="mb-2">Vitality: <span id="vitalityLevel">1</span> (XP: <span id="vitalityXP">0</span>)
+      <div class="progress"><div class="progress-bar" id="vitalityBar" role="progressbar" style="width: 0%">0 XP</div></div>
+    </div>
+    <div class="mb-2">Social: <span id="socialLevel">1</span> (XP: <span id="socialXP">0</span>)
+      <div class="progress"><div class="progress-bar" id="socialBar" role="progressbar" style="width: 0%">0 XP</div></div>
     </div>
   </div>
 
-  <!-- Bootstrap JS Bundle (includes Popper) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Your renderer logic (frontend JS) -->
+  <!-- Add Task Button -->
+  <button id="addTaskBtn" class="btn btn-primary mb-3">➕ Add Task</button>
+
+  <!-- Current Task -->
+  <hr>
+  <h4>📜 Current Task</h4>
+  <div id="currentTask" class="mb-3"></div>
+
+  <!-- Task List -->
+  <div id="taskList" class="list-group"></div>
+
+  <!-- Task History Log -->
+  <hr>
+  <h4>📜 Task History</h4>
+  <div id="taskHistory" class="mb-3"></div>
+
+  <!-- XP Gain Animation -->
+  <div id="xpGain" class="xp-gain">+10 XP</div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMessage">Task added successfully!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addTaskForm">
+            <div class="mb-3">
+              <label for="taskSelect" class="form-label">Choose Task</label>
+              <select id="taskSelect" class="form-select">
+                <option value="Learn a new word and use it" data-xp="5">Learn a new word and use it (5 XP)</option>
+                <option value="Do 20 pushups" data-xp="10">Do 20 pushups (10 XP)</option>
+                <option value="Read 10 pages of a book" data-xp="10">Read 10 pages of a book (10 XP)</option>
+                <option value="Drink 8 cups of water" data-xp="10">Drink 8 cups of water (10 XP)</option>
+                <option value="Meditate for 10 minutes" data-xp="10">Meditate for 10 minutes (10 XP)</option>
+                <option value="Call a friend or family member" data-xp="10">Call a friend or family member (10 XP)</option>
+                <option value="Walk 5,000 steps" data-xp="15">Walk 5,000 steps (15 XP)</option>
+                <option value="Watch a documentary" data-xp="15">Watch a documentary (15 XP)</option>
+                <option value="Eat 3 healthy meals" data-xp="15">Eat 3 healthy meals (15 XP)</option>
+                <option value="Start a conversation with someone new" data-xp="15">Start a conversation with someone new (15 XP)</option>
+                <option value="Wake up before 7 AM" data-xp="15">Wake up before 7 AM (15 XP)</option>
+                <option value="Complete a workout session" data-xp="20">Complete a workout session (20 XP)</option>
+                <option value="Study for 1 hour" data-xp="20">Study for 1 hour (20 XP)</option>
+                <option value="Attend a social event" data-xp="20">Attend a social event (20 XP)</option>
+                <option value="Stick to a schedule for the day" data-xp="25">Stick to a schedule for the day (25 XP)</option>
+                <option value="Other">Other (custom task)</option>
+              </select>
+            </div>
+            <div class="mb-3" id="customTaskContainer" style="display:none">
+              <label for="customTaskName" class="form-label">Custom Task</label>
+              <input type="text" id="customTaskName" class="form-control" placeholder="Enter your task">
+            </div>
+            <div class="mb-3">
+              <label for="statSelect" class="form-label">Select Stat</label>
+              <select id="statSelect" class="form-select">
+                <option value="strength">Strength</option>
+                <option value="wisdom">Wisdom</option>
+                <option value="discipline">Discipline</option>
+                <option value="vitality">Vitality</option>
+                <option value="social">Social</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="xpInput" class="form-label">XP Amount</label>
+              <input type="number" id="xpInput" class="form-control" readonly>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

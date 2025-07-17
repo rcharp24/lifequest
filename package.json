@@ -4,12 +4,14 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "npx nodemon --watch . --exec electron ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^37.2.1"
+    "electron": "^37.2.2",
+    "electron-reload": "^2.0.0-alpha.1"
   }
 }
