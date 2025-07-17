@@ -1,316 +1,146 @@
-// ===============================
-// Stats Tracking Object
-// ===============================
-const stats = {
-  strength: { xp: 0, level: 1 },
-  wisdom: { xp: 0, level: 1 },
-  discipline: { xp: 0, level: 1 },
-  vitality: { xp: 0, level: 1 },
-  social: { xp: 0, level: 1 }
-};
-
-// ===============================
-// DOM References
-// ===============================
-const addTaskModal = new bootstrap.Modal(document.getElementById('addTaskModal'));
-const addTaskForm = document.getElementById('addTaskForm');
-const taskSelect = document.getElementById('taskSelect');
-const statSelect = document.getElementById('statSelect');
-const xpInput = document.getElementById('xpInput');
-const taskList = document.getElementById('taskList');
-const addTaskBtn = document.getElementById("addTaskBtn");
-const customTaskContainer = document.getElementById("customTaskContainer");
-const customTaskName = document.getElementById("customTaskName");
-const themeToggle = document.getElementById('themeToggle');
-const xpGain = document.getElementById("xpGain");
-const taskNotes = document.getElementById("taskNotes");
-const taskHistory = document.getElementById("taskHistory");
-
-let taskLog = JSON.parse(localStorage.getItem("taskLog") || "[]");
-// ===============================
-// Dark Mode Initialization
-// ===============================
-function applyDarkMode(isDark) {
-  if (isDark) {
-    document.body.classList.add('dark-mode');
-    themeToggle.checked = true;
-  } else {
-    document.body.classList.remove('dark-mode');
-    themeToggle.checked = false;
-  }
-  localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+// Helper functions
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Load saved dark mode preference
-applyDarkMode(localStorage.getItem('darkMode') === 'true');
+function showToast(message) {
+  const toastMessage = document.getElementById("toastMessage");
+  toastMessage.textContent = message;
+  const toast = new bootstrap.Toast(document.getElementById("toast"));
+  toast.show();
+}
 
-// Toggle dark mode
-themeToggle.addEventListener('change', () => {
-  applyDarkMode(themeToggle.checked);
-});
+function updateXP(stat, xp) {
+  const xpKey = `${stat}XP`;
+  const levelKey = `${stat}Level`;
 
-// ===============================
-// Add Task Button
-// ===============================
-addTaskBtn.addEventListener('click', () => {
-  addTaskForm.reset();
-  taskNotes.value = ""; // Clear notes
-  customTaskContainer.style.display = "none";
-  xpInput.setAttribute("readonly", true);
-  addTaskModal.show();
-});
+  stats[xpKey] += xp;
 
-// ===============================
-// Handle Task Selection
-// ===============================
-taskSelect.addEventListener("change", function () {
-  const selectedOption = this.options[this.selectedIndex];
-  const selectedValue = selectedOption.value;
+  const newLevel = Math.floor(stats[xpKey] / 100) + 1;
+  stats[levelKey] = newLevel;
 
-  if (selectedValue === "Other") {
-    customTaskContainer.style.display = "block";
-    xpInput.value = "";
-    xpInput.removeAttribute("readonly");
-  } else {
-    customTaskContainer.style.display = "none";
-    const xp = selectedOption.getAttribute("data-xp");
-    xpInput.value = xp;
-    xpInput.setAttribute("readonly", true);
-  }
-});
-
-// ===============================
-// Submit Task Form
-// ===============================
-addTaskForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-
-  const stat = statSelect.value;
-  const xp = parseInt(xpInput.value, 10);
-  const notes = taskNotes.value.trim();
-
-  const selectedOption = taskSelect.options[taskSelect.selectedIndex];
-  const taskName = selectedOption.value === "Other"
-    ? customTaskName.value.trim()
-    : selectedOption.textContent;
-
-  if (!taskName || !stat || isNaN(xp) || xp <= 0) {
-    alert("Please fill in all fields correctly.");
-    return;
-  }
-
-  if (xp % 5 !== 0) {
-    alert("XP amount must be divisible by 5.");
-    return;
-  }
-
-  // Add XP, update level and UI
-  stats[stat].xp += xp;
-  checkLevelUp(stat);
   updateUI();
+  saveToLocalStorage();
+  showXPGain(`+${xp} XP to ${capitalize(stat)}!`);
+}
 
-  // Animate XP gain
-  showXPGain(xp);
-
-  // Adding the task to the UI
-  addTaskToUI(taskName, stat, xp, notes);
-
-  //Log and save
-  logTask(taskName, stat, xp, notes);
-  saveToLocalStorage;
-
-  addTaskModal.hide();
-});
-  // Add task to task list
-  function addTaskToUI(taskName, stat, xp, notes) {
-  const taskElement = document.createElement("div");
-  taskElement.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-2");
-  
-  // Store data for logging on delete
-  taskElement.dataset.taskName = taskName;
-  taskElement.dataset.stat = stat;
-  taskElement.dataset.xp = xp;
-  taskElement.dataset.notes = notes;
-  
-  taskElement.innerHTML = `
-  <div>
-    <strong>${taskName}</strong> → +${xp} XP to ${capitalize(stat)}
-    ${notes ? `<br><small class="text-muted">📝 ${notes}</small>` : ""}
-  </div>
-  <button class="btn btn-sm btn-danger">🗑️</button>
-
-  `;
-
-
-  // Delete task button
-  taskElement.querySelector("button").addEventListener("click", () => {
-    logTask(taskName, stat, parseInt(xp), notes);
-    taskElement.remove();
-    saveToLocalStorage();
-  });
-
-  // Add to UI and save
-  taskList.prepend(taskElement);
-
-};
-// ===============================
-// Update UI
-// ===============================
 function updateUI() {
-  for (let stat in stats) {
-    document.getElementById(`${stat}XP`).textContent = stats[stat].xp;
-    document.getElementById(`${stat}Level`).textContent = stats[stat].level;
-
-    const xpThisLevel = stats[stat].xp % 100;
+  ["strength", "wisdom", "discipline", "vitality", "social"].forEach(stat => {
+    const xp = stats[`${stat}XP`];
+    const level = stats[`${stat}Level`];
     const bar = document.getElementById(`${stat}Bar`);
-    bar.style.width = `${xpThisLevel}%`;
-    bar.textContent = `${xpThisLevel} XP`;
-  }
-}
-
-// ===============================
-// Local Storage Functions
-// ===============================
-function saveToLocalStorage() {
-  localStorage.setItem("stats", JSON.stringify(stats));
-
-  const taskElements = taskList.querySelectorAll("div[data-task-name]");
-  const tasks = Array.from(taskElements).map(task => ({
-    name: task.dataset.taskName,
-    stat: task.dataset.stat,
-    xp: parseInt(task.dataset.xp),
-    notes: task.dataset.notes
-  }));
-
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function loadFromLocalStorage() {
-  const savedStats = JSON.parse(localStorage.getItem("stats"));
-  if (savedStats) Object.assign(stats, savedStats);
-
-  const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-  savedTasks.forEach(({ name, stat, xp, notes }) => {
-    addTaskToUI(name, stat, xp, notes);
+    const percentage = (xp % 100);
+    document.getElementById(`${stat}XP`).textContent = xp;
+    document.getElementById(`${stat}Level`).textContent = level;
+    bar.style.width = `${percentage}%`;
+    bar.textContent = `${xp % 100} XP`;
   });
-
-  updateUI();
-  renderHistory()
 }
 
-loadFromLocalStorage();
-
-// ===============================
-// Level Up Checker
-// ===============================
-function checkLevelUp(stat) {
-  const xp = stats[stat].xp;
-  const currentLevel = stats[stat].level;
-  const newLevel = Math.floor(xp / 100) + 1;
-
-  if (newLevel > currentLevel) {
-    stats[stat].level = newLevel;
-    alert(`🎉 ${capitalize(stat)} leveled up to ${newLevel}!`);
-
-    // Animate progress bar glow
-    const bar = document.getElementById(`${stat}Bar`);
-    bar.style.animation = "progressGlow 1s ease-in-out";
-    bar.addEventListener("animationend", () => {
-      bar.style.animation = "";
-    }, { once: true });
-  }
-}
-
-// ===============================
-// XP Gain Animation
-// ===============================
-function showXPGain(amount) {
-  xpGain.textContent = `+${amount} XP`;
+function showXPGain(message) {
+  const xpGain = document.getElementById("xpGain");
+  xpGain.textContent = message;
   xpGain.style.opacity = 1;
-  xpGain.classList.remove("xp-gain");
-  void xpGain. offsetWidth;
-  xpGain.classList.add("xp-gain");
+  xpGain.style.top = "50%";
 
-  // Fade out after animation
   setTimeout(() => {
-    xpElement.style.opacity = 0;
+    xpGain.style.opacity = 0;
   }, 1000);
 }
 
-// ===============================
-// Streak Tracker
-// ===============================
-function updateStreak() {
-  const today = new Date().toDateString();
-  const lastDate = localStorage.getItem("lastActionDate");
-  let streak = parseInt(localStorage.getItem("streak") || "0");
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (lastDate === yesterday.toDateString()) {
-    streak++;
-  } else if (lastDate !== today) {
-    streak = 1; // reset
-  }
-
-  localStorage.setItem("lastActionDate", today);
-  localStorage.setItem("streak", streak.toString());
-
-  const display = document.getElementById("streakDisplay");
-  if (display) {
-    display.textContent = `🔥 Streak: ${streak} days`;
-  }
-}
-
-//Reminder System
-function checkReminder() {
-  const lastDate = localStorage.getItem("lastActionDate");
-  const now = new Date();
-  const last = new Date(lastDate);
-  const hoursSinceLast = Math.floor((now - last) / (1000 * 60 * 60));
-
-  
-  if (isNaN(hoursSinceLast) || hoursSinceLast >= 24) {
-    alert("⏰ It's been a while since your last task! Stay on track! 💪");
-  }
-}
-
-checkReminder();
-
-
-// Moving Completed Task to Task History
 function logTask(name, stat, xp, notes) {
-  const timestamp = new Date().toLocaleString();
-  const entry = { name, stat, xp, notes, timestamp };
+  const history = document.getElementById("taskHistory");
+  const entry = document.createElement("div");
+  entry.classList.add("mb-1");
+  entry.innerHTML = `<strong>${name}</strong> → +${xp} XP to ${capitalize(stat)} ${notes ? `<br><small class="text-muted">📝 ${notes}</small>` : ""}`;
+  history.prepend(entry);
 
-  taskLog.unshift(entry);
-  if (taskLog.length > 50) taskLog.pop(); // Limit log size
-
-  localStorage.setItem("taskLog", JSON.stringify(taskLog));
-  renderHistory();
+  document.getElementById("currentTask").innerHTML = entry.innerHTML;
 }
 
-function renderHistory() {
-  taskHistory.innerHTML = "";
-  taskLog.forEach(({ name, stat, xp, notes, timestamp }) => {
-    const div = document.createElement("div");
-    div.classList.add("border", "p-2", "mb-2", "rounded", "bg-light", "text-dark");
-
-    div.innerHTML = `
-      <div><strong>${name}</strong> → +${xp} XP to ${capitalize(stat)}</div>
-      ${notes ? `<div><small class="text-muted">📝 ${notes}</small></div>` : ""}
-      <div><small class="text-muted">🕒 ${timestamp}</small></div>
-    `;
-
-    taskHistory.appendChild(div);
-  });
+// Save/load stats to localStorage
+function saveToLocalStorage() {
+  localStorage.setItem("lifeQuestStats", JSON.stringify(stats));
 }
 
-
-// ===============================
-// Utility: Capitalize
-// ===============================
-function capitalize(word) {
-  return word.charAt(0).toUpperCase() + word.slice(1);
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem("lifeQuestStats");
+  if (saved) Object.assign(stats, JSON.parse(saved));
 }
+
+// Dark Mode
+document.getElementById("themeToggle").addEventListener("change", e => {
+  document.body.classList.toggle("bg-dark", e.target.checked);
+  document.body.classList.toggle("text-white", e.target.checked);
+});
+
+// Task form logic
+const taskSelect = document.getElementById("taskSelect");
+const customTaskContainer = document.getElementById("customTaskContainer");
+const customTaskName = document.getElementById("customTaskName");
+const xpInput = document.getElementById("xpInput");
+
+taskSelect.addEventListener("change", () => {
+  const selected = taskSelect.value;
+  const option = taskSelect.options[taskSelect.selectedIndex];
+  if (selected === "Other") {
+    customTaskContainer.style.display = "block";
+    xpInput.readOnly = false;
+    xpInput.value = "";
+  } else {
+    customTaskContainer.style.display = "none";
+    xpInput.readOnly = true;
+    xpInput.value = option.dataset.xp;
+  }
+});
+
+// Global stats
+const stats = {
+  strengthXP: 0, strengthLevel: 1,
+  wisdomXP: 0, wisdomLevel: 1,
+  disciplineXP: 0, disciplineLevel: 1,
+  vitalityXP: 0, vitalityLevel: 1,
+  socialXP: 0, socialLevel: 1,
+};
+
+// Load on start
+loadFromLocalStorage();
+updateUI();
+
+// Form Submission
+document.getElementById("addTaskForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  let taskName = taskSelect.value === "Other" ? customTaskName.value.trim() : taskSelect.options[taskSelect.selectedIndex].text;
+  const xp = parseInt(xpInput.value);
+  const stat = document.getElementById("statSelect").value;
+
+  if (!taskName) {
+    showToast("Please enter a custom task name.");
+    return;
+  }
+
+  if (isNaN(xp) || xp <= 0 || xp % 5 !== 0) {
+    showToast("XP amount must be a positive number divisible by 5.");
+    return;
+  }
+
+  updateXP(stat, xp);
+  logTask(taskName, stat, xp);
+
+  // Reset
+  document.getElementById("addTaskForm").reset();
+  customTaskContainer.style.display = "none";
+  xpInput.value = "";
+  saveToLocalStorage();
+
+  const modal = bootstrap.Modal.getInstance(document.getElementById("addTaskModal"));
+  modal.hide();
+  showToast("✅ Task added successfully!");
+});
+
+// Button to open modal
+document.getElementById("addTaskBtn").addEventListener("click", () => {
+  const modal = new bootstrap.Modal(document.getElementById("addTaskModal"));
+  modal.show();
+});

@@ -57,19 +57,20 @@ body.dark-mode ::-webkit-scrollbar-thumb {
 h1 {
   text-align: center;
 }
-.xp-gain {
+#xpGain {
   position: fixed;
-  bottom: 80px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   font-size: 2rem;
   font-weight: bold;
   color: #00bcd4;
   opacity: 0;
-  pointer-events: none;
-  animation: xp-float 1s ease-out forwards;
+  transition: opacity 0.5s ease, top 0.5s ease;
   z-index: 9999;
+  pointer-events: none;
 }
+
 
 @keyframes xp-float {
   0% {
