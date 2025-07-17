@@ -1,146 +1,220 @@
-// Helper functions
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function showToast(message) {
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+  // Select DOM elements
+  const taskSelect = document.getElementById("taskSelect");
+  const xpInput = document.getElementById("xpInput");
+  const customTaskContainer = document.getElementById("customTaskContainer");
+  const customTaskName = document.getElementById("customTaskName");
+  const addTaskBtn = document.getElementById("addTaskBtn");
+  const addTaskModal = new bootstrap.Modal(document.getElementById("addTaskModal"));
+  const addTaskForm = document.getElementById("addTaskForm");
+  const taskList = document.getElementById("taskList");
+  const currentTask = document.getElementById("currentTask");
+  const taskHistory = document.getElementById("taskHistory");
+  const toastEl = document.getElementById("toast");
   const toastMessage = document.getElementById("toastMessage");
-  toastMessage.textContent = message;
-  const toast = new bootstrap.Toast(document.getElementById("toast"));
-  toast.show();
-}
-
-function updateXP(stat, xp) {
-  const xpKey = `${stat}XP`;
-  const levelKey = `${stat}Level`;
-
-  stats[xpKey] += xp;
-
-  const newLevel = Math.floor(stats[xpKey] / 100) + 1;
-  stats[levelKey] = newLevel;
-
-  updateUI();
-  saveToLocalStorage();
-  showXPGain(`+${xp} XP to ${capitalize(stat)}!`);
-}
-
-function updateUI() {
-  ["strength", "wisdom", "discipline", "vitality", "social"].forEach(stat => {
-    const xp = stats[`${stat}XP`];
-    const level = stats[`${stat}Level`];
-    const bar = document.getElementById(`${stat}Bar`);
-    const percentage = (xp % 100);
-    document.getElementById(`${stat}XP`).textContent = xp;
-    document.getElementById(`${stat}Level`).textContent = level;
-    bar.style.width = `${percentage}%`;
-    bar.textContent = `${xp % 100} XP`;
-  });
-}
-
-function showXPGain(message) {
+  const toast = new bootstrap.Toast(toastEl);
   const xpGain = document.getElementById("xpGain");
-  xpGain.textContent = message;
-  xpGain.style.opacity = 1;
-  xpGain.style.top = "50%";
+  const themeToggle = document.getElementById("themeToggle");
+  const streakDisplay = document.getElementById("streakDisplay");
 
-  setTimeout(() => {
-    xpGain.style.opacity = 0;
-  }, 1000);
-}
+  const noteSection = document.getElementById("noteSection");
+  const taskNote = document.getElementById("taskNote");
 
-function logTask(name, stat, xp, notes) {
-  const history = document.getElementById("taskHistory");
-  const entry = document.createElement("div");
-  entry.classList.add("mb-1");
-  entry.innerHTML = `<strong>${name}</strong> → +${xp} XP to ${capitalize(stat)} ${notes ? `<br><small class="text-muted">📝 ${notes}</small>` : ""}`;
-  history.prepend(entry);
+  const stats = ["strength", "wisdom", "discipline", "vitality", "social"];
 
-  document.getElementById("currentTask").innerHTML = entry.innerHTML;
-}
+  // Application state
+  const state = {
+    stats: Object.fromEntries(stats.map(stat => [stat, { xp: 0, level: 1 }])),
+    streak: 0,
+    lastCompletedDate: null
+  };
 
-// Save/load stats to localStorage
-function saveToLocalStorage() {
-  localStorage.setItem("lifeQuestStats", JSON.stringify(stats));
-}
+  // Load theme preference
+  if (localStorage.getItem("darkMode") === "true") {
+    document.body.classList.add("bg-dark", "text-white");
+    themeToggle.checked = true;
+  }
 
-function loadFromLocalStorage() {
-  const saved = localStorage.getItem("lifeQuestStats");
-  if (saved) Object.assign(stats, JSON.parse(saved));
-}
+  // Load saved state if available
+  const savedState = JSON.parse(localStorage.getItem("lifeQuestState"));
+  if (savedState) Object.assign(state, savedState);
+  updateStatsDisplay();
+  updateStreakDisplay();
 
-// Dark Mode
-document.getElementById("themeToggle").addEventListener("change", e => {
-  document.body.classList.toggle("bg-dark", e.target.checked);
-  document.body.classList.toggle("text-white", e.target.checked);
-});
+  // Theme toggle listener
+  themeToggle.addEventListener("change", () => {
+    document.body.classList.toggle("bg-dark");
+    document.body.classList.toggle("text-white");
+    localStorage.setItem("darkMode", themeToggle.checked);
+  });
 
-// Task form logic
-const taskSelect = document.getElementById("taskSelect");
-const customTaskContainer = document.getElementById("customTaskContainer");
-const customTaskName = document.getElementById("customTaskName");
-const xpInput = document.getElementById("xpInput");
+  // Handle task selection to show XP or custom name
+  taskSelect.addEventListener("change", () => {
+    const selectedOption = taskSelect.selectedOptions[0];
+    const isOther = selectedOption.value === "Other";
+    customTaskContainer.style.display = isOther ? "block" : "none";
+    xpInput.value = selectedOption.dataset.xp || "";
+  });
 
-taskSelect.addEventListener("change", () => {
-  const selected = taskSelect.value;
-  const option = taskSelect.options[taskSelect.selectedIndex];
-  if (selected === "Other") {
-    customTaskContainer.style.display = "block";
-    xpInput.readOnly = false;
-    xpInput.value = "";
-  } else {
+  // Handle add task button click
+  addTaskBtn.addEventListener("click", () => {
+    taskSelect.selectedIndex = 0;
+    xpInput.value = taskSelect.selectedOptions[0].dataset.xp;
     customTaskContainer.style.display = "none";
-    xpInput.readOnly = true;
-    xpInput.value = option.dataset.xp;
+    addTaskModal.show();
+  });
+
+  // Handle form submission for adding a task
+  addTaskForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const selectedOption = taskSelect.selectedOptions[0];
+    const taskName = selectedOption.value === "Other" ? customTaskName.value : selectedOption.value;
+    const stat = document.getElementById("statSelect").value;
+    const xp = parseInt(xpInput.value);
+
+    if (!taskName || !stat || isNaN(xp)) return;
+
+    addTaskToList(taskName, stat, xp);
+    awardXP(stat, xp);
+    showToast("Task added successfully!");
+    updateStreak();
+    addTaskModal.hide();
+  });
+
+  // Adds a new task to the task list
+  function addTaskToList(task, stat, xp) {
+    const item = document.createElement("button");
+    item.className = "list-group-item list-group-item-action";
+    item.textContent = `${task} (+${xp} XP to ${stat})`;
+    item.addEventListener("click", () => {
+      currentTask.textContent = `✅ ${task}`;
+      noteSection.style.display = 'block'; // show note section
+      taskNote.value = ""; // clear any previous note
+      item.remove();
+    });
+    taskList.appendChild(item);
   }
-});
 
-// Global stats
-const stats = {
-  strengthXP: 0, strengthLevel: 1,
-  wisdomXP: 0, wisdomLevel: 1,
-  disciplineXP: 0, disciplineLevel: 1,
-  vitalityXP: 0, vitalityLevel: 1,
-  socialXP: 0, socialLevel: 1,
-};
+  // Completes the current task and saves it with a note
+  function completeCurrentTask() {
+    const note = taskNote.value;
+    const taskName = currentTask.textContent;
 
-// Load on start
-loadFromLocalStorage();
-updateUI();
+    const completedTask = {
+      name: taskName,
+      note: note,
+      date: new Date().toLocaleString()
+    };
 
-// Form Submission
-document.getElementById("addTaskForm").addEventListener("submit", e => {
-  e.preventDefault();
-
-  let taskName = taskSelect.value === "Other" ? customTaskName.value.trim() : taskSelect.options[taskSelect.selectedIndex].text;
-  const xp = parseInt(xpInput.value);
-  const stat = document.getElementById("statSelect").value;
-
-  if (!taskName) {
-    showToast("Please enter a custom task name.");
-    return;
+    addToHistory(completedTask);
+    clearCurrentTask();
   }
 
-  if (isNaN(xp) || xp <= 0 || xp % 5 !== 0) {
-    showToast("XP amount must be a positive number divisible by 5.");
-    return;
+  // Clears the current task display and note field
+  function clearCurrentTask() {
+    currentTask.textContent = "";
+    taskNote.value = "";
+    noteSection.style.display = 'none';
   }
 
-  updateXP(stat, xp);
-  logTask(taskName, stat, xp);
+  // Adds a completed task to the history view
+  function addToHistory(task) {
+    const history = document.getElementById('taskHistory');
 
-  // Reset
-  document.getElementById("addTaskForm").reset();
-  customTaskContainer.style.display = "none";
-  xpInput.value = "";
-  saveToLocalStorage();
+    const taskCard = document.createElement('div');
+    taskCard.classList.add('card', 'mb-2');
 
-  const modal = bootstrap.Modal.getInstance(document.getElementById("addTaskModal"));
-  modal.hide();
-  showToast("✅ Task added successfully!");
-});
+    taskCard.innerHTML = `
+      <div class="card-body">
+        <h5 class="card-title">${task.name}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">${task.date}</h6>
+        ${task.note ? `<p class="card-text"><strong>Note:</strong> ${task.note}</p>` : ''}
+      </div>
+    `;
 
-// Button to open modal
-document.getElementById("addTaskBtn").addEventListener("click", () => {
-  const modal = new bootstrap.Modal(document.getElementById("addTaskModal"));
-  modal.show();
+    history.prepend(taskCard); // add most recent first
+  }
+
+  // Toggle to view task history
+  document.getElementById('viewHistoryBtn').addEventListener('click', () => {
+    document.getElementById('taskHistory').style.display = 'block';
+    document.getElementById('calendarView').style.display = 'none';
+  });
+
+  // Toggle to view calendar
+  document.getElementById('viewCalendarBtn').addEventListener('click', () => {
+    document.getElementById('taskHistory').style.display = 'none';
+    document.getElementById('calendarView').style.display = 'block';
+  });
+
+  // Awards XP and levels up if necessary
+  function awardXP(stat, xp) {
+    const data = state.stats[stat];
+    data.xp += xp;
+    const xpNeeded = data.level * 100;
+    if (data.xp >= xpNeeded) {
+      data.xp -= xpNeeded;
+      data.level++;
+      confetti(); // optional celebration effect
+    }
+    animateXPGain(`+${xp} XP`);
+    updateStatsDisplay();
+    saveState();
+  }
+
+  // Updates the progress bars and levels
+  function updateStatsDisplay() {
+    stats.forEach(stat => {
+      const { xp, level } = state.stats[stat];
+      const percent = Math.floor((xp / (level * 100)) * 100);
+      document.getElementById(`${stat}Level`).textContent = level;
+      document.getElementById(`${stat}XP`).textContent = xp;
+      const bar = document.getElementById(`${stat}Bar`);
+      bar.style.width = `${percent}%`;
+      bar.textContent = `${xp} XP`;
+    });
+  }
+
+  // Updates the user's daily streak
+  function updateStreak() {
+    const today = new Date().toDateString();
+    const last = state.lastCompletedDate;
+    if (last !== today) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (last === yesterday.toDateString()) state.streak++;
+      else state.streak = 1;
+      state.lastCompletedDate = today;
+    }
+    updateStreakDisplay();
+    saveState();
+  }
+
+  // Displays current streak visually
+  function updateStreakDisplay() {
+    streakDisplay.textContent = `🔥 Streak: ${state.streak} day${state.streak !== 1 ? "s" : ""}`;
+  }
+
+  // Animates XP gain text
+  function animateXPGain(text) {
+    xpGain.textContent = text;
+    xpGain.classList.add("show");
+    setTimeout(() => xpGain.classList.remove("show"), 1000);
+  }
+
+  // Displays toast message for feedback
+  function showToast(message) {
+    toastMessage.textContent = message;
+    toast.show();
+  }
+
+  // Saves app state to localStorage
+  function saveState() {
+    localStorage.setItem("lifeQuestState", JSON.stringify(state));
+  }
+
+  // Expose complete function globally if needed (e.g. from button onclick)
+  window.completeCurrentTask = completeCurrentTask;
 });

@@ -8,7 +8,17 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body class="p-4">
+<!-- History / Calendar toggle -->
+<div class="btn-group mt-4" role="group">
+  <button id="viewHistoryBtn" class="btn btn-outline-primary">View History</button>
+  <button id="viewCalendarBtn" class="btn btn-outline-secondary">View Calendar</button>
+</div>
 
+<!-- Placeholder divs -->
+<div id="taskHistory" class="mt-3"></div>
+<div id="calendarView" style="display:none;" class="mt-3">
+  <p>📅 Calendar view coming soon!</p>
+</div>
   <!-- Avatar and Header -->
   <div class="text-center mb-4">
     <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=hero" alt="Avatar" width="100" class="rounded-circle shadow" />
@@ -47,18 +57,19 @@
 
   <!-- Add Task Button -->
   <button id="addTaskBtn" class="btn btn-primary mb-3">➕ Add Task</button>
-
-  <!-- Task List -->
-  <div id="taskList" class="list-group"></div>
   
-  <!-- Current Task -->
-    <hr>
-    <h4>📜 Current Task</h4>
-    <div id="currentTask" class="mb-3"></div>
-  <!-- Task History Log -->
+  <!-- Task List -->
   <hr>
-  <h4>📜 Task History</h4>
-  <div id="taskHistory" class="mb-3"></div>
+  <h4>📜 Current Task</h4>
+  <div id="taskList" class="list-group"></div>
+
+  <!-- Task Note Section -->
+  <div id="noteSection" style="display:none;">
+    <label for="taskNote" class="form-label mt-2">Add a note:</label>
+    <textarea id="taskNote" class="form-control" rows="3" placeholder="What did you accomplish or learn?"></textarea>
+    <button class="btn btn-success mt-2" onclick="completeCurrentTask()">Complete Task</button>
+  </div>
+
 
   <!-- XP Gain Animation -->
   <div id="xpGain" class="xp-gain">+10 XP</div>
